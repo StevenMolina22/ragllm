@@ -1,26 +1,35 @@
-from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
-from llama_index.core import Settings
-from llama_index.llms.ollama import Ollama
-from llama_index.embeddings.ollama import OllamaEmbedding
-import sys
+from argparse import ArgumentParser
+from models import run_ollama, run_deepseek
+import argparse
 
-def setup_ollama():
-    Settings.llm = Ollama(
-        model="llama3.1:8b",
-        request_timeout=420
+def get_parser() -> ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="My CLI App",
+        usage="my_app --model MODEL --env ENV DIR"  # Custom usage message
     )
-    Settings.embed_model = OllamaEmbedding(model_name="llama3.1:8b")
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="deepseek",
+        help="Specify the model to use (e.g., deepseek)"  # Help text
+    )
+    parser.add_argument(
+        "directory",
+        type=str,
+        help="Directory path"
+    )
+    return parser
 
 def main():
-    directory = sys.argv[1]
+    args = get_parser().parse_args()
 
-    setup_ollama()
-    documents = SimpleDirectoryReader(f"../{directory}").load_data()
-    index = VectorStoreIndex.from_documents(documents)
-
-    query = input("> ")
-    response = index.as_query_engine().query(query)
-    print(response)
+    match args.model:
+        case "deepseek":
+            run_deepseek(args.directory)
+        case "ollama":
+            run_ollama(args.directory)
+        case _:
+            print("Not a valid model.")
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,5 @@
 [project]
-name = "llama-index-rag"
+name = "ragllm"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
