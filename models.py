@@ -9,24 +9,28 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-DEEPSEEK_API_KEY=os.getenv("DEEPSEEK_API_KEY")
-BASE_URL="https://openrouter.ai/api/v1"
-MODEL="deepseek/deepseek-r1:free"
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://openrouter.ai/api/v1")
+DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek/deepseek-r1:free")
+
+HUGGINGFACE_EMBEDDING_MODEL = os.getenv("HUGGINGFACE_EMBEDDING_MODEL", "BAAI/bge-small-en")
+
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 
 def setup_deepseek():
     Settings.llm = DeepSeek(
-        model=MODEL,
-        api_base=BASE_URL,
         api_key=DEEPSEEK_API_KEY,
+        api_base=DEEPSEEK_BASE_URL,
+        model=DEEPSEEK_MODEL,
     )
-    Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en")
+    Settings.embed_model = HuggingFaceEmbedding(model_name=HUGGINGFACE_EMBEDDING_MODEL)
 
 def setup_ollama():
     Settings.llm = Ollama(
-        model="llama3.1:8b",
+        model=OLLAMA_MODEL,
         request_timeout=420
     )
-    Settings.embed_model = OllamaEmbedding(model_name="llama3.1:8b")
+    Settings.embed_model = OllamaEmbedding(model_name=OLLAMA_MODEL)
 
 def run_ollama(dir: str):
     setup_ollama()

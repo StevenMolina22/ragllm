@@ -5,7 +5,7 @@ import argparse
 def get_parser() -> ArgumentParser:
     parser = argparse.ArgumentParser(
         description="My CLI App",
-        usage="my_app --model MODEL --env ENV DIR"  # Custom usage message
+        usage="my_app --model MODEL --env ENV DIR" # Usage message
     )
     parser.add_argument(
         "--model",
