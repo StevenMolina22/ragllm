@@ -1,7 +1,7 @@
 # RAGLLM: Retrieval-Augmented Generation CLI Tool
 
 ## Overview
-RAGLLM is a command-line interface (CLI) tool designed to enable natural language querying of document sets using retrieval-augmented generation (RAG). It leverages large language models (LLMs) such as DeepSeek and Ollama, combined with embedding models for efficient vector-based search, to provide accurate and context-aware responses. This tool is ideal for developers, researchers, or professionals seeking to extract insights from unstructured text data.
+RAGLLM is a command-line interface (CLI) tool designed to enable natural language querying of document sets using retrieval-augmented generation (RAG). It leverages large language models (LLMs) such as DeepSeek, OpenRouter, and Ollama, combined with embedding models for efficient vector-based search, to provide accurate and context-aware responses. This tool is ideal for developers, researchers, or professionals seeking to extract insights from unstructured text data.
 
 ---
 
@@ -27,8 +27,9 @@ RAGLLM is a command-line interface (CLI) tool designed to enable natural languag
 
 ## Features
 - Query documents using natural language with RAG techniques.
-- Supports multiple LLMs: DeepSeek and Ollama.
+- Supports multiple LLMs: DeepSeek, OpenRouter, and Ollama.
 - Integrates with advanced embedding models for semantic search.
+- Robust error handling and configuration validation.
 - Lightweight CLI interface for ease of use.
 - Modular design for extensibility and experimentation.
 
@@ -39,7 +40,10 @@ RAGLLM is a command-line interface (CLI) tool designed to enable natural languag
 ### Prerequisites
 - **Python**: Version 3.13 or higher.
 - **Operating System**: Compatible with Windows, macOS, or Linux.
-- **API Key**: A DeepSeek API key from OpenRouter (required for DeepSeek model).
+- **API Keys**: 
+  - DeepSeek API key (required for DeepSeek model)
+  - OpenRouter API key (required for OpenRouter model)
+  - Ollama installed locally (required for Ollama model)
 
 ### Setup Instructions
 1. **Clone the Repository**:
@@ -57,11 +61,21 @@ RAGLLM is a command-line interface (CLI) tool designed to enable natural languag
    ```
 
 3. **Set Up Environment Variables**:
-   Create a `.env` file in the project root and add your DeepSeek API key:
-   ```plaintext
-   DEEPSEEK_API_KEY=your-api-key-here
+   Copy the `.env.example` file to `.env` in the project root and add your API keys:
+   ```bash
+   cp .env.example .env
    ```
-   The tool uses `dotenv` to load this automatically.
+   Then edit the `.env` file with your preferred text editor to add your API keys:
+   ```plaintext
+   # For DeepSeek
+   DEEPSEEK_API_KEY=your-deepseek-api-key-here
+   
+   # For OpenRouter
+   OPENROUTER_API_KEY=your-openrouter-api-key-here
+   
+   # Additional configuration options are available in the .env file
+   ```
+   The tool uses `dotenv` to load these variables automatically.
 
 4. **Verify Installation**:
    Run the help command to ensure the CLI is working:
@@ -75,28 +89,41 @@ RAGLLM is a command-line interface (CLI) tool designed to enable natural languag
 
 ### Command-Line Arguments
 The tool accepts the following arguments:
-| Argument     | Type  | Default    | Description                          |
-|--------------|-------|------------|--------------------------------------|
-| `--model`    | `str` | `deepseek` | Model to use (`deepseek` or `ollama`)|
-| `directory`  | `str` | (Required) | Path to the directory with documents|
+| Argument     | Type  | Default    | Description                                               |
+|--------------|-------|------------|-----------------------------------------------------------|
+| `--model`    | `str` | `deepseek` | Model to use (`deepseek`, `openrouter`, or `ollama`)      |
+| `directory`  | `str` | (Required) | Path to the directory with documents                      |
 
 ### Examples
 1. **Query Documents with DeepSeek**:
    ```bash
    python main.py --model deepseek ./my_docs
    ```
-   After launching, type a query (e.g., "What is the main topic?") and press Enter. Type `bye` or `q` to exit.
 
-2. **Query Documents with Ollama**:
+2. **Query Documents with OpenRouter**:
+   ```bash
+   python main.py --model openrouter ./my_docs
+   ```
+
+3. **Query Documents with Ollama**:
    ```bash
    python main.py --model ollama ./my_docs
    ```
 
-3. **Sample Interaction**:
+4. **Sample Interaction**:
    ```
-   > What is the summary of the first document?
-   [Response from LLM]
+   === RAG Chat Interface ===
+   Type 'q' or 'bye' to exit
+   Type your questions below:
+
+   > What is the main topic of these documents?
+   [Response from LLM with information from your documents]
+   
+   > Can you summarize the key points?
+   [Summary based on document content]
+   
    > bye
+   Exiting chat. Goodbye!
    ```
 
 ---
@@ -104,13 +131,22 @@ The tool accepts the following arguments:
 ## Project Structure
 ```
 ragllm/
-├── example_snippets/    # Example scripts (e.g., deepseek.py)
-├── .gitignore           # Git ignore rules
-├── .python-version      # Specifies Python 3.13
-├── main.py              # CLI entry point
-├── models.py            # Core logic for model setup and querying
-├── pyproject.toml       # Project metadata and dependencies
-└── .env                 # Environment variables (not tracked)
+├── .env                   # Environment variables with API keys (not tracked in git)
+├── .env.example           # Example environment variables file
+├── .gitignore             # Git ignore rules
+├── .python-version        # Specifies Python 3.13
+├── main.py                # CLI entry point
+├── models/                # Model implementations directory
+│   ├── __init__.py        # Package initialization
+│   ├── deepseek.py        # DeepSeek model implementation
+│   ├── models.py          # Core model handling logic
+│   ├── ollama.py          # Ollama model implementation
+│   └── openrouter.py      # OpenRouter model implementation
+├── pyproject.toml         # Project metadata and dependencies
+└── wrappers/              # Test wrappers for model verification
+    ├── __init__.py        # Package initialization
+    ├── ollama.py          # Ollama test wrapper
+    └── openrouter.py      # OpenRouter test wrapper
 ```
 
 ---
@@ -119,10 +155,11 @@ ragllm/
 
 ### Supported Models
 - **DeepSeek**: Uses the `deepseek/deepseek-r1:free` model via OpenRouter API.
-- **Ollama**: Uses the `llama3.1:8b` model with a 420-second request timeout.
+- **OpenRouter**: Uses the `google/gemini-2.0-flash-exp:free` model or other models available on OpenRouter.
+- **Ollama**: Uses the `llama3.1:8b` model with a 420-second request timeout. Requires local Ollama installation.
 
 ### Embedding Models
-- **HuggingFace**: `BAAI/bge-small-en` for DeepSeek queries.
+- **HuggingFace**: `BAAI/bge-small-en` for DeepSeek and OpenRouter queries.
 - **Ollama**: `llama3.1:8b` embeddings for Ollama queries.
 
 ### Dependencies
@@ -137,11 +174,30 @@ See `pyproject.toml` for the full list.
 ## Configuration
 
 ### Environment Variables
-| Variable          | Description                   | Example Value                          |
-|-------------------|-------------------------------|----------------------------------------|
-| `DEEPSEEK_API_KEY`| API key for DeepSeek access   | `sk-or-v1-...`                        |
+The following environment variables can be configured in your `.env` file:
 
-The `BASE_URL` and `MODEL` are hardcoded in `models.py` but can be modified for flexibility.
+#### DeepSeek Configuration
+| Variable             | Required | Description                      | Default Value                    |
+|----------------------|----------|----------------------------------|----------------------------------|
+| `DEEPSEEK_API_KEY`   | Yes      | API key for DeepSeek access      | -                                |
+| `DEEPSEEK_BASE_URL`  | No       | Base URL for DeepSeek API        | `https://openrouter.ai/api/v1`   |
+| `DEEPSEEK_MODEL`     | No       | DeepSeek model to use            | `deepseek/deepseek-r1:free`      |
+
+#### OpenRouter Configuration
+| Variable             | Required | Description                      | Default Value                    |
+|----------------------|----------|----------------------------------|----------------------------------|
+| `OPENROUTER_API_KEY` | Yes      | API key for OpenRouter access    | -                                |
+| `OPENROUTER_MODEL`   | No       | OpenRouter model to use          | `google/gemini-2.0-flash-exp:free` |
+
+#### Ollama Configuration
+| Variable             | Required | Description                      | Default Value                    |
+|----------------------|----------|----------------------------------|----------------------------------|
+| `OLLAMA_MODEL`       | No       | Ollama model to use              | `llama3.1:8b`                    |
+
+#### General Configuration
+| Variable                     | Required | Description                      | Default Value                    |
+|------------------------------|----------|----------------------------------|----------------------------------|
+| `HUGGINGFACE_EMBEDDING_MODEL`| No       | HuggingFace embedding model      | `BAAI/bge-small-en`              |
 
 ---
 
@@ -154,6 +210,44 @@ Contributions are welcome! To contribute:
 5. Open a pull request.
 
 ---
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+1. **Empty Completions or API Errors**
+   - **Issue**: Model returns empty completions or API errors.
+   - **Solution**: Check that you've set the correct API keys in your `.env` file. Ensure the keys are valid and not expired.
+
+2. **Configuration Failed**
+   - **Issue**: "Failed to set up [model] model" error when starting the application.
+   - **Solution**: The required environment variables for your chosen model are missing or incorrect. Check the "Environment Variables" section above and ensure all required variables are set.
+
+3. **No Documents Found**
+   - **Issue**: "No documents found in [directory]" error.
+   - **Solution**: Ensure your directory path is correct and contains readable text files. The application supports common document formats like `.txt`, `.md`, `.pdf`, etc.
+
+4. **Ollama Not Working**
+   - **Issue**: Ollama model fails to load or respond.
+   - **Solution**: Ensure Ollama is properly installed on your system and the requested model is available. Run `ollama list` to see available models and `ollama pull llama3.1:8b` to download the default model.
+
+5. **Memory Issues**
+   - **Issue**: Application crashes with memory errors when processing large document sets.
+   - **Solution**: Try using smaller document sets or splitting large documents into smaller chunks.
+
+### Testing Your Configuration
+
+You can test each model's configuration independently using the wrapper scripts:
+
+```bash
+# Test OpenRouter configuration
+python -m wrappers.openrouter
+
+# Test Ollama configuration
+python -m wrappers.ollama
+```
+
+These scripts will attempt to set up the model and perform a simple completion to verify that everything is working correctly.
 
 ## Contact
 For questions or feedback, reach out to [stevenmolina2205@gmail.com] or open an issue on the GitHub repository.
